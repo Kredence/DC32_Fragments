@@ -1,0 +1,271 @@
+// Credit to Adafruit. This code is a hacked up copy of their NeoPixel program.
+// "NeoPixels" are based on rebranded WS2812 LEDs
+// The LEDs on the eye are from a different vendor and their RGB channels are reversed on Red and Green. They're GRB.
+// I'm hoping to get code written to swap the channels automatically on the eye LEDs. They're LEDs 60-65
+
+#include <Adafruit_NeoPixel.h>
+
+#define BUTTON_PIN  12  // Pin used for the onboard button
+#define PIXEL_PIN   13  // Digital IO pin connected to the LEDs.
+#define PIXEL_COUNT 65  // Number of LEDs
+
+// Setup the strip for code
+Adafruit_NeoPixel strip(PIXEL_COUNT, PIXEL_PIN, NEO_RGB + NEO_KHZ800);
+
+// set the start of switches below, defaulting at position 0
+boolean oldState = HIGH;
+int mode = 0;
+int baseBrightness = 10;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
+  strip.show();  // Initialize all pixels to 'off'
+}
+
+void loop() {
+  boardFlicker();
+  // Get current button state.
+  // boolean newState = digitalRead(BUTTON_PIN);
+
+  // // Check if state changed from high to low (button press).
+  // if((newState == LOW) && (oldState == HIGH)) {
+  //   // Short delay to debounce button.
+  //   delay(20);
+  //   // Check if button is still low after debounce.
+  //   newState = digitalRead(BUTTON_PIN);
+  //   if(newState == LOW) {      // Yes, still low
+  //     if(++mode > 8) mode = 0; // Advance to next mode, wrap around after #8
+  //     switch(mode) {           // Start the new animation...
+  //       case 0:
+  //         colorWipe(strip.Color(  0,   0,   0), 50);    // Black/off
+  //         break;
+  //       case 1:
+  //         boardFlicker();
+  //         //colorTest(strip.Color(10,   0,   0), 50);    // Red
+  //         break;
+  //       // case 1:
+  //       //   colorWipe(strip.Color(255,   0,   0), 50);    // Red
+  //       //   break;
+  //       case 2:
+  //         colorWipe(strip.Color(  0, 255,   0), 50);    // Green
+  //         break;
+  //       case 3:
+  //         colorWipe(strip.Color(  0,   0, 255), 0);    // Blue
+  //         break;
+  //       case 4:
+  //         theaterChase(strip.Color(127, 127, 127), 0); // White
+  //         break;
+  //       case 5:
+  //         theaterChase(strip.Color(127,   0,   0), 0); // Red
+  //         break;
+  //       case 6:
+  //         theaterChase(strip.Color(  0,   0, 127), 0); // Blue
+  //         break;
+  //       case 7:
+  //         rainbow(10);
+  //         break;
+  //       case 8:
+  //         theaterChaseRainbow(50);
+  //         break;
+  //     }
+  //   }
+
+  // if(newState == HIGH) {      // Yes, still low
+  //   switch(mode) {           // Start the new animation...
+  //     case 0:
+  //       colorWipe(strip.Color(  0,   0,   0), 50);    // Black/off
+  //       break;
+  //     case 1:
+  //       boardFlicker();
+  //       //colorTest(strip.Color(10,   0,   0), 50);    // Red
+  //       break;
+  //     // case 1:
+  //     //   colorWipe(strip.Color(255,   0,   0), 50);    // Red
+  //     //   break;
+  //     case 2:
+  //       colorWipe(strip.Color(  0, 255,   0), 50);    // Green
+  //       break;
+  //     case 3:
+  //       colorWipe(strip.Color(  0,   0, 255), 0);    // Blue
+  //       break;
+  //     case 4:
+  //       theaterChase(strip.Color(127, 127, 127), 0); // White
+  //       break;
+  //     case 5:
+  //       theaterChase(strip.Color(127,   0,   0), 0); // Red
+  //       break;
+  //     case 6:
+  //       theaterChase(strip.Color(  0,   0, 127), 0); // Blue
+  //       break;
+  //     case 7:
+  //       rainbow(10);
+  //       break;
+  //     case 8:
+  //       theaterChaseRainbow(50);
+  //       break;
+  //     }
+  //   }
+
+  // }
+
+  // // Set the last-read button state to the old state.
+  // oldState = newState;
+}
+
+//strip.clear();
+void boardFlicker() {
+  
+  uint32_t pixelAqua = strip.Color(0,  baseBrightness,  baseBrightness); //RGB
+  uint32_t pixelRed = strip.Color((baseBrightness + 10),  0,  0); //RGB
+  uint32_t pixelGreen = strip.Color(0,  baseBrightness,  0); //RGB
+  uint32_t rightAngleGreen = strip.Color(baseBrightness,  0,  0); //GRB
+  uint32_t rightAngleRed = strip.Color(0,  baseBrightness + 10,  0); //GRB
+  uint32_t rightAngleWhite = strip.Color(baseBrightness,  baseBrightness,  baseBrightness); //GRB
+  uint32_t rightAngleAqua = strip.Color(baseBrightness,  0,  baseBrightness); //GRB
+  strip.setPixelColor(3, pixelRed); // Bottom right corner LED
+  strip.setPixelColor(23, pixelRed); // Bottom left corner LED
+  strip.setPixelColor(43, pixelRed); // Top corner LED
+  strip.setPixelColor(60, rightAngleGreen); // Eye center LED
+  strip.setPixelColor(61, rightAngleRed); // Eye left LED
+  strip.setPixelColor(62, rightAngleRed); // Eye right LED
+  strip.setPixelColor(63, rightAngleWhite); // Top of board - Left LED
+  strip.setPixelColor(64, rightAngleWhite); // Top of board - Right LED
+  
+
+  for(int i=0; i<=2; i++) { // For each pixel in strip...
+    int randomBrightness = random(baseBrightness);
+    if (randomBrightness < (baseBrightness / 2)){
+      randomBrightness = random(baseBrightness);
+    }
+    uint32_t randomBrigthness = pixelAqua = strip.Color(0,  randomBrightness,  randomBrightness);
+    strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+  }
+
+  for(int i=4; i<=22; i++) { // For each pixel in strip...
+    int randomBrightness = random(baseBrightness);
+    if (randomBrightness < (baseBrightness / 2)){
+      randomBrightness = random(baseBrightness);
+    }
+    uint32_t randomBrigthness = pixelAqua = strip.Color(0,  randomBrightness,  randomBrightness);
+    strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+  }
+
+  for(int i=24; i<=42; i++) { // For each pixel in strip...
+    int randomBrightness = random(baseBrightness);
+    if (randomBrightness < (baseBrightness / 2)){
+      randomBrightness = random(baseBrightness);
+    }
+    uint32_t randomBrigthness = pixelAqua = strip.Color(0,  randomBrightness,  randomBrightness);
+    strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+  }
+
+  for(int i=44; i<=59; i++) { // For each pixel in strip...
+    int randomBrightness = random(baseBrightness);
+    if (randomBrightness < (baseBrightness / 2)){
+      randomBrightness = random(baseBrightness);
+    }
+    uint32_t randomBrigthness = pixelAqua = strip.Color(0,  randomBrightness,  randomBrightness);
+    strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+  }
+
+  strip.show();
+
+  delay(75);
+
+  
+
+
+
+  // Serial.print("uint32 value aqua = ");
+  // Serial.println(pixelAqua);
+  // Serial.print("/t uint32 value Red = ");
+  // Serial.println(pixelRed);
+  // Serial.print("/t uint32 value Green = ");
+  // Serial.println(pixelGreen);
+
+
+  // for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
+  //   strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+  //   strip.show();                          //  Update strip to match
+  //   delay(wait);                           //  Pause for a moment
+  // }
+}
+
+
+
+
+void colorWipe(uint32_t color, int wait) {
+  for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
+    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
+    strip.show();                          //  Update strip to match
+    delay(wait);                           //  Pause for a moment
+  }
+}
+
+// Theater-marquee-style chasing lights. Pass in a color (32-bit value,
+// a la strip.Color(r,g,b) as mentioned above), and a delay time (in ms)
+// between frames.
+void theaterChase(uint32_t color, int wait) {
+  for(int a=0; a<10; a++) {  // Repeat 10 times...
+    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
+      strip.clear();         //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in steps of 3...
+      for(int c=b; c<strip.numPixels(); c += 3) {
+        strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      strip.show(); // Update strip with new contents
+      delay(wait);  // Pause for a moment
+    }
+  }
+}
+
+// Rainbow cycle along whole strip. Pass delay time (in ms) between frames.
+void rainbow(int wait) {
+  // Hue of first pixel runs 3 complete loops through the color wheel.
+  // Color wheel has a range of 65536 but it's OK if we roll over, so
+  // just count from 0 to 3*65536. Adding 256 to firstPixelHue each time
+  // means we'll make 3*65536/256 = 768 passes through this outer loop:
+  for(long firstPixelHue = 0; firstPixelHue < 3*65536; firstPixelHue += 256) {
+    for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
+      // Offset pixel hue by an amount to make one full revolution of the
+      // color wheel (range of 65536) along the length of the strip
+      // (strip.numPixels() steps):
+      int pixelHue = firstPixelHue + (i * 65536L / strip.numPixels());
+      // strip.ColorHSV() can take 1 or 3 arguments: a hue (0 to 65535) or
+      // optionally add saturation and value (brightness) (each 0 to 255).
+      // Here we're using just the single-argument hue variant. The result
+      // is passed through strip.gamma32() to provide 'truer' colors
+      // before assigning to each pixel:
+      strip.setPixelColor(i, strip.gamma32(strip.ColorHSV(pixelHue)));
+    }
+    strip.show(); // Update strip with new contents
+    delay(wait);  // Pause for a moment
+  }
+}
+
+// Rainbow-enhanced theater marquee. Pass delay time (in ms) between frames.
+void theaterChaseRainbow(int wait) {
+  int firstPixelHue = 0;     // First pixel starts at red (hue 0)
+  for(int a=0; a<30; a++) {  // Repeat 30 times...
+    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
+      strip.clear();         //   Set all pixels in RAM to 0 (off)
+      // 'c' counts up from 'b' to end of strip in increments of 3...
+      for(int c=b; c<strip.numPixels(); c += 3) {
+        // hue of pixel 'c' is offset by an amount to make one full
+        // revolution of the color wheel (range 65536) along the length
+        // of the strip (strip.numPixels() steps):
+        int      hue   = firstPixelHue + c * 65536L / strip.numPixels();
+        uint32_t color = strip.gamma32(strip.ColorHSV(hue)); // hue -> RGB
+        strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
+      }
+      strip.show();                // Update strip with new contents
+      delay(wait);                 // Pause for a moment
+      firstPixelHue += 65536 / 90; // One cycle of color wheel over 90 frames
+    }
+  }
+}
