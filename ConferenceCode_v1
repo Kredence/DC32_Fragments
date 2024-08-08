@@ -1,0 +1,186 @@
+// Credit to Adafruit. This code is a hacked up copy of their NeoPixel program.
+// "NeoPixels" are based on rebranded WS2812 LEDs
+// The LEDs on the eye are from a different vendor and their RGB channels are reversed on Red and Green. They're GRB.
+// I'm hoping to get code written to swap the channels automatically on the eye LEDs. They're LEDs 60-65
+
+#include <Adafruit_NeoPixel.h>
+
+#define BUTTON_PIN  12  // Pin used for the onboard button
+#define PIXEL_PIN   13  // Digital IO pin connected to the LEDs.
+#define PIXEL_COUNT 65  // Number of LEDs
+
+// Setup the strip for code
+Adafruit_NeoPixel strip(PIXEL_COUNT, PIXEL_PIN, NEO_RGB + NEO_KHZ800);
+
+
+// set the start of switches below, defaulting at position 0
+boolean oldState = HIGH;
+int mode = 0;
+int baseBrightness = 20;
+uint32_t pixelRed = strip.Color((baseBrightness + 10),  0,  0); //RGB
+uint32_t pixelGreen = strip.Color(0,  baseBrightness,  0); //RGB
+uint32_t pixelBlue = strip.Color(0,  0,  baseBrightness); //RGB
+uint32_t pixelWhite = strip.Color(baseBrightness / 2,  baseBrightness / 2,  baseBrightness / 2); //RGB
+uint32_t pixelAqua = strip.Color(0,  baseBrightness,  baseBrightness); //RGB
+uint32_t pixelPurple = strip.Color( 30,0,30); //RGB
+uint32_t pixelTeal = strip.Color(15,0,10); //RGB
+uint32_t pixelTealDim = strip.Color(5,0,2); //RGB
+
+uint32_t rightAngleGreen = strip.Color(baseBrightness + 20,  0,  0); //GRB
+uint32_t rightAngleRed = strip.Color(0,  baseBrightness + 30,  0); //GRB
+uint32_t rightAngleWhite = strip.Color(baseBrightness + 20,  baseBrightness + 20,  baseBrightness + 20); //GRB
+uint32_t rightAngleAqua = strip.Color(baseBrightness,  0,  baseBrightness); //GRB
+uint32_t rightAngleTeal = strip.Color(30,0,20);
+
+int breath = baseBrightness;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  strip.begin(); // Initialize NeoPixel strip object (REQUIRED)
+  strip.show();  // Initialize all pixels to 'off'
+}
+
+void loop() {
+
+  //Get current button state.
+  boolean newState = digitalRead(BUTTON_PIN);
+
+  // Serial.print("Mode first = ");
+  // Serial.println(mode);
+
+  // Check if state changed from high to low (button press).
+  if((newState == LOW) && (oldState == HIGH)) {
+    // Short delay to debounce button.
+    delay(20);
+    // Check if button is still low after debounce.
+    newState = digitalRead(BUTTON_PIN);
+      if(newState == LOW) {    // Yes, still low
+        if(++mode > 3){
+          mode = 0;  // Advance to next mode, wrap around after #8
+        }
+      }
+    }
+  // Serial.println("mode second = ");
+  // Serial.println(mode);
+    
+    switch(mode) {           // Start the new animation...
+      case 1:  //There is an issue on how "mode" is being set. The code starts at 1 and ends at 0
+        boardFlicker_1();
+        break;
+      case 2:
+        boardFlicker_2();
+        break;
+      case 3:
+        boardFlicker_3();
+        break;
+      case 0:
+        breathingBadge();    // Black/off
+        break;
+    }
+
+  // Set the last-read button state to the old state.
+  oldState = newState;
+}
+
+void boardFlicker_1() {
+
+  strip.setPixelColor( 3, pixelRed); // Bottom right corner LED
+  strip.setPixelColor(23, pixelRed); // Bottom left corner LED
+  strip.setPixelColor(43, pixelRed); // Top corner LED
+
+  strip.setPixelColor(60, rightAngleGreen); // Eye center LED
+  strip.setPixelColor(61, rightAngleRed); // Eye left LED
+  strip.setPixelColor(62, rightAngleRed); // Eye right LED
+
+  strip.setPixelColor(63, rightAngleWhite); // Top of board - Left LED
+  strip.setPixelColor(64, rightAngleWhite); // Top of board - Right LED
+  
+  for(int i=0; i<=59; i++) {    // For each pixel in strip...
+    if((i != 3) && (i != 23) & (i != 43)){    //set a color for everything but the corner LEDs
+      int randomBrightness = random(baseBrightness);
+      if(random(6) == 1){
+        (randomBrightness = 0);
+        }
+      uint32_t randomBrigthness = strip.Color(0,  randomBrightness,  randomBrightness);
+      strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+      }
+    } 
+
+  strip.show();
+  delay(90);
+}
+
+void boardFlicker_2() {
+
+  strip.setPixelColor( 3, pixelBlue); // Bottom right corner LED
+  strip.setPixelColor(23, pixelBlue); // Bottom left corner LED
+  strip.setPixelColor(43, pixelBlue); // Top corner LED
+
+  strip.setPixelColor(60, rightAngleWhite); // Eye center LED
+  strip.setPixelColor(61, rightAngleWhite); // Eye left LED
+  strip.setPixelColor(62, rightAngleWhite); // Eye right LED
+
+  strip.setPixelColor(63, rightAngleAqua); // Top of board - Left LED
+  strip.setPixelColor(64, rightAngleAqua); // Top of board - Right LED
+  
+  for(int i=0; i < 60; i++) {    // For each pixel in strip...
+    if((i != 3) && (i != 23) & (i != 43)){    //set a color for everything but the corner LEDs
+      int randomBrightness = random(baseBrightness + 15);
+      if(random(6) == 1){
+        (randomBrightness = 0);
+        }
+      uint32_t randomBrigthness = strip.Color(randomBrightness,  0,  0);
+      strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+      }
+    } 
+
+  strip.show();
+  delay(90);
+}
+
+void boardFlicker_3() {
+
+  strip.setPixelColor( 3, pixelGreen); // Bottom right corner LED
+  strip.setPixelColor(23, pixelGreen); // Bottom left corner LED
+  strip.setPixelColor(43, pixelGreen); // Top corner LED
+
+  strip.setPixelColor(60, rightAngleGreen); // Eye center LED
+  strip.setPixelColor(61, rightAngleGreen); // Eye left LED
+  strip.setPixelColor(62, rightAngleGreen); // Eye right LED
+
+  strip.setPixelColor(63, rightAngleWhite); // Top of board - Left LED
+  strip.setPixelColor(64, rightAngleWhite); // Top of board - Right LED
+  
+  for(int i=0; i<=59; i++) {    // For each pixel in strip...
+    if((i != 3) && (i != 23) & (i != 43)){    //set a color for everything but the corner LEDs
+      int randomBrightness = random(baseBrightness + 15);
+      if(random(6) == 1){
+        (randomBrightness = 0);
+        }
+      uint32_t randomBrigthness = strip.Color(randomBrightness,  randomBrightness,  randomBrightness);
+      strip.setPixelColor(i, randomBrigthness);    //  Set pixel's color (in RAM)
+      }
+    } 
+
+  strip.show();
+  delay(90);
+}
+
+void breathingBadge() {  //this will "breath" later. I'm out of time to keep working on it.
+
+  strip.setPixelColor(60, rightAngleWhite); // Eye center LED
+  strip.setPixelColor(61, rightAngleWhite); // Eye left LED
+  strip.setPixelColor(62, rightAngleWhite); // Eye right LED
+
+  strip.setPixelColor(63, rightAngleTeal); // Top of board - Left LED
+  strip.setPixelColor(64, rightAngleTeal); // Top of board - Right LED
+
+  for(int x=0; x < 60; x++){
+    strip.setPixelColor(x, pixelTealDim);
+    }
+
+  strip.show();
+
+}
